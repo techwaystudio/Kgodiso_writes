@@ -234,6 +234,17 @@ img {
   gap: 0.5rem;
 }
 
+.logo-image {
+  display: block;
+  max-height: 48px;
+  width: auto;
+}
+
+.header .logo-link {
+  pointer-events: none;
+  cursor: default;
+}
+
 .logo-icon {
   color: var(--primary);
 }
@@ -405,6 +416,15 @@ img {
   justify-content: center;
   align-items: center;
   position: relative;
+}
+
+.hero-logo {
+  position: relative;
+  width: 480px;
+  height: auto;
+  opacity: 0.95;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .glass-orb {

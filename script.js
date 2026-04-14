@@ -1,3 +1,60 @@
+window.appState = {
+  cart: JSON.parse(localStorage.getItem('kgodiso_cart') || '[]'),
+  userEmail: localStorage.getItem('kgodiso_user') || null,
+
+  saveCart() {
+    localStorage.setItem('kgodiso_cart', JSON.stringify(this.cart));
+  },
+
+  addToCart(item) {
+    const existing = this.cart.find(cartItem => cartItem.id === item.id);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      this.cart.push({ ...item, quantity: 1 });
+    }
+    this.saveCart();
+    this.updateCartBadge();
+  },
+
+  updateQuantity(id, change) {
+    const item = this.cart.find(cartItem => cartItem.id === id);
+    if (!item) return;
+
+    item.quantity += change;
+    if (item.quantity <= 0) {
+      this.cart = this.cart.filter(cartItem => cartItem.id !== id);
+    }
+
+    this.saveCart();
+    this.updateCartBadge();
+  },
+
+  getCartTotal() {
+    return this.cart.reduce((sum, cartItem) => sum + cartItem.price * cartItem.quantity, 0);
+  },
+
+  getDeliveryFee() {
+    return this.cart.length > 0 ? 60 : 0;
+  },
+
+  updateCartBadge() {
+    const badge = document.querySelector('.cart-badge');
+    if (!badge) return;
+    const count = this.cart.reduce((sum, cartItem) => sum + cartItem.quantity, 0);
+    badge.textContent = count;
+  },
+
+  updateUI() {
+    this.updateCartBadge();
+  },
+
+  login(email) {
+    this.userEmail = email;
+    localStorage.setItem('kgodiso_user', email);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // Intersection Observer for scroll animations
@@ -130,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
 
         const subtotal = window.appState.getCartTotal();
-        const delivery = window.appState.deliveryFee;
+        const delivery = window.appState.getDeliveryFee();
         subtotalEl.textContent = `R${subtotal.toFixed(2)}`;
         deliveryEl.textContent = `R${delivery.toFixed(2)}`;
         totalEl.textContent = `R${(subtotal + delivery).toFixed(2)}`;
@@ -142,6 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('checkout-form')) {
     const itemsContainer = document.getElementById('checkout-items');
     const subtotalEl = document.getElementById('checkout-subtotal');
+    const deliveryEl = document.getElementById('checkout-delivery');
+    const deliveryPriceEl = document.getElementById('delivery-price');
     const totalEl = document.getElementById('checkout-total');
     
     const cart = window.appState.cart;
@@ -157,21 +216,36 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
 
     const subtotal = window.appState.getCartTotal();
-    const delivery = window.appState.deliveryFee;
+    const delivery = window.appState.getDeliveryFee();
     subtotalEl.textContent = `R${subtotal.toFixed(2)}`;
+    deliveryEl.textContent = `R${delivery.toFixed(2)}`;
+    deliveryPriceEl.textContent = `R${delivery.toFixed(2)}`;
     totalEl.textContent = `R${(subtotal + delivery).toFixed(2)}`;
 
     document.getElementById('checkout-form').addEventListener('submit', (e) => {
       e.preventDefault();
+      const formData = {
+        fullName: document.getElementById('fullName').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        address: document.getElementById('address').value,
+        city: document.getElementById('city').value,
+        zip: document.getElementById('zip').value
+      };
+      localStorage.setItem('checkoutData', JSON.stringify(formData));
       window.location.href = 'payment.html';
     });
   }
 
   if (document.getElementById('payment-form')) {
     const subtotalEl = document.getElementById('payment-subtotal');
+    const deliveryEl = document.getElementById('payment-delivery');
     const totalEl = document.getElementById('payment-total');
     const payfastAmount = document.getElementById('payfast-amount');
     const payfastEmail = document.getElementById('payfast-email-address');
+    const payfastCell = document.getElementById('payfast-cell-number');
+    const payfastNameFirst = document.getElementById('payfast-name-first');
+    const payfastNameLast = document.getElementById('payfast-name-last');
     const payfastCustom = document.getElementById('payfast-custom');
     const payfastReturnUrl = document.getElementById('payfast-return-url');
     const payfastCancelUrl = document.getElementById('payfast-cancel-url');
@@ -182,14 +256,34 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = 'cart.html';
     }
 
+    // Populate form with checkout data
+    const checkoutData = JSON.parse(localStorage.getItem('checkoutData') || '{}');
+    if (checkoutData.fullName) document.getElementById('payerName').value = checkoutData.fullName;
+    if (checkoutData.phone) document.getElementById('payerPhone').value = checkoutData.phone;
+    if (checkoutData.email) document.getElementById('payerEmail').value = checkoutData.email;
+
     const subtotal = window.appState.getCartTotal();
-    const delivery = window.appState.deliveryFee;
+    const delivery = window.appState.getDeliveryFee();
     const total = subtotal + delivery;
 
     subtotalEl.textContent = `R${subtotal.toFixed(2)}`;
+    deliveryEl.textContent = `R${delivery.toFixed(2)}`;
     totalEl.textContent = `R${total.toFixed(2)}`;
     payfastAmount.value = total.toFixed(2);
-    payfastCustom.value = JSON.stringify({ subtotal: subtotal.toFixed(2), delivery: delivery.toFixed(2), total: total.toFixed(2), items: cart.map(item => ({ id: item.id, title: item.title, qty: item.quantity })) });
+    payfastCustom.value = `count=${cart.length};total=R${total.toFixed(2)}`;
+
+    if (payfastCell) {
+      payfastCell.value = checkoutData.phone || document.getElementById('payerPhone')?.value || '';
+    }
+
+    const payfastFormName = checkoutData.fullName || document.getElementById('payerName')?.value || '';
+    const nameParts = payfastFormName.trim().split(/\s+/).filter(Boolean);
+    if (payfastNameFirst) payfastNameFirst.value = nameParts[0] || '';
+    if (payfastNameLast) payfastNameLast.value = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
+    if (payfastEmail) {
+      payfastEmail.value = checkoutData.email || document.getElementById('payerEmail')?.value || '';
+    }
 
     const buildAbsoluteUrl = (path) => {
       if (window.location.protocol.startsWith('http')) {
@@ -206,7 +300,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('payment-form').addEventListener('submit', () => {
       const payerEmail = document.getElementById('payerEmail').value.trim();
-      payfastEmail.value = payerEmail;
+      const payerPhone = document.getElementById('payerPhone').value.trim();
+      const payerName = document.getElementById('payerName').value.trim();
+
+      if (payfastEmail) payfastEmail.value = payerEmail;
+      if (payfastCell) payfastCell.value = payerPhone;
+
+      const namePartsSubmit = payerName.split(/\s+/).filter(Boolean);
+      if (payfastNameFirst) payfastNameFirst.value = namePartsSubmit[0] || '';
+      if (payfastNameLast) payfastNameLast.value = namePartsSubmit.slice(1).join(' ') || namePartsSubmit[0] || '';
+
+      payfastAmount.value = total.toFixed(2);
     });
   }
 
@@ -236,7 +340,12 @@ class AppState {
   constructor() {
     this.cart = JSON.parse(localStorage.getItem('cart')) || [];
     this.user = JSON.parse(localStorage.getItem('user')) || null;
-    this.deliveryFee = 60;
+  }
+
+  getDeliveryFee() {
+    // Only waive delivery when the cart contains only the eBook "Lengwalo le le timetšego" (id: 3)
+    const hasOnlyEbook = this.cart.length > 0 && this.cart.every(item => item.id === '3');
+    return hasOnlyEbook ? 0 : 60;
   }
 
   saveCart() {

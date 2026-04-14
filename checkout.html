@@ -22,10 +22,7 @@
   <div class="app-layout">
     <header class="header">
       <div class="container header-container">
-        <a href="index.html" class="logo-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-icon"><path d="M16 8.2A2.22 2.22 0 0 0 13.8 6c-.8 0-1.4.3-1.8.9-.4-.6-1-.9-1.8-.9A2.22 2.22 0 0 0 8 8.2c0 .6.3 1.2.7 1.6A226.652 226.652 0 0 0 12 13a404 404 0 0 0 3.3-3.1 2.413 2.413 0 0 0 .7-1.7"></path><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"></path></svg>
-          <span class="logo-text">Kgodiso Writes</span>
-        </a>
+        <div class="logo-link"><img src="logo.png" class="logo-image" alt="Kgodiso Writes logo"></div>
         <nav class="desktop-nav">
           <a href="index.html" class="nav-link">Home</a>
           <a href="books.html" class="nav-link">Books</a>
@@ -56,8 +53,12 @@
             <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Shipping Details</h2>
             <form id="checkout-form" action="payment.html">
               <div class="form-group">
-                <label class="form-label" for="fullName">Full Name</label>
+                <label class="form-label" for="fullName">Full Names</label>
                 <input type="text" id="fullName" class="form-control" required placeholder="Jane Doe">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="tel" id="phone" class="form-control" required placeholder="+27 12 345 6789">
               </div>
               <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
@@ -87,7 +88,7 @@
                     <span style="color: var(--muted-foreground); font-size: 0.875rem;">3-5 business days</span>
                   </div>
                 </div>
-                <span style="font-weight: 600;">R60.00</span>
+                <span style="font-weight: 600;" id="delivery-price">R60.00</span>
               </div>
 
               <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem; justify-content: center; font-size: 1rem; padding: 1rem;">
@@ -108,7 +109,7 @@
           </div>
           <div class="summary-row">
             <span>Delivery</span>
-            <span>R60.00</span>
+            <span id="checkout-delivery">R60.00</span>
           </div>
           <div class="summary-total">
             <span>Total</span>
@@ -121,3 +122,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
