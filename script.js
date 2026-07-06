@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const base = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
         return new URL(path, base).href;
       }
-      return new URL(path, 'https://example.com/').href;
+      return new URL(path, 'https://www.kgodisowrites.co.za/').href;
     };
     payfastReturnUrl.value = buildAbsoluteUrl('index.html');
     payfastCancelUrl.value = buildAbsoluteUrl('payment.html');
