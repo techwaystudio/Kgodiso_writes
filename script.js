@@ -313,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!hasPhysicalBook) {
       if (methHeading) methHeading.style.display = 'none';
       if (methContainer) methContainer.style.display = 'none';
+      if (methodSelect) methodSelect.required = false;
       updateUI(0);
     } else {
       updateUI(0); // Require selection, so initially it's 0 or we can keep it 60 if we default PAXI, but no option is selected initially.
