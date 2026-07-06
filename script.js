@@ -7,8 +7,8 @@ class AppState {
 
   getDeliveryFee() {
     if (this.cart.length === 0) return 0;
-    // Book id '3' is the eBook, which doesn't require delivery
-    const hasPhysicalBook = this.cart.some(item => String(item.id) !== '3');
+    // eBook items have IDs ending with '-ebook'
+    const hasPhysicalBook = this.cart.some(item => !String(item.id).endsWith('-ebook'));
     return hasPhysicalBook ? 60 : 0;
   }
 
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span>R${(item.price * item.quantity).toFixed(2)}</span>
       </div>
     `).join('');
-    const hasPhysicalBook = cart.some(item => String(item.id) !== '3');
+    const hasPhysicalBook = cart.some(item => !String(item.id).endsWith('-ebook'));
     let currentDeliveryFee = hasPhysicalBook ? 60 : 0;
     const subtotal = window.appState.getCartTotal();
 
