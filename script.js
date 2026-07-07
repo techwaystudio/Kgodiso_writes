@@ -133,6 +133,9 @@ class AppState {
 }
 
 window.appState = new AppState();
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 function showFormMessage(container, message, type = 'error') {
   if (!container) return;
@@ -345,33 +348,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('checkout-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      // Ensure if they need delivery, they selected something
-      if (hasPhysicalBook && methodSelect && methodSelect.value === 'courier' && !provinceSelect.value) {
-        alert("Please select a province.");
-        return;
-      }
-      
-      const formData = {
-        fullName: document.getElementById('fullName').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        address: document.getElementById('address').value,
-        city: document.getElementById('city').value,
-        zip: document.getElementById('zip').value,
-        deliveryMethod: hasPhysicalBook && methodSelect ? methodSelect.value : 'none',
-        deliveryFee: currentDeliveryFee
-      };
-      
-      if (formData.deliveryMethod === 'paxi') {
-        formData.pepCode = pepInput.value;
-      } else if (formData.deliveryMethod === 'courier') {
-        formData.province = provinceSelect.options[provinceSelect.selectedIndex].text;
-      }
+  e.preventDefault();
+  // Ensure if they need delivery, they selected something
+  if (hasPhysicalBook && methodSelect && methodSelect.value === 'courier' && !provinceSelect.value) {
+    alert("Please select a province.");
+    return;
+  }
 
+  const formData = {
+    fullName: document.getElementById('fullName').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    address: document.getElementById('address').value,
+    city: document.getElementById('city').value,
+    zip: document.getElementById('zip').value,
+    deliveryMethod: hasPhysicalBook && methodSelect ? methodSelect.value : 'none',
+    deliveryFee: currentDeliveryFee,
+    items: cart.map(item => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      quantity: item.quantity,
+      total: (item.price * item.quantity).toFixed(2)
+    })),
+    subtotal: window.appState.getCartTotal(),
+    total: window.appState.getCartTotal() + currentDeliveryFee,
+    timestamp: new Date().toISOString()
+  };
+
+  if (formData.deliveryMethod === 'paxi') {
+    formData.pepCode = pepInput.value;
+  } else if (formData.deliveryMethod === 'courier') {
+    formData.province = provinceSelect.options[provinceSelect.selectedIndex].text;
+  }
+
+  // Save to Firestore
+  db.collection('orders').add(formData)
+    .then(() => {
+      // Optionally you could store locally as before
       localStorage.setItem('checkoutData', JSON.stringify(formData));
       window.location.href = 'payment.html';
+    })
+    .catch(err => {
+      console.error('Error saving order:', err);
+      alert('Failed to save order. Please try again.');
     });
+});
   }
 
   if (document.getElementById('payment-form')) {
