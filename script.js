@@ -382,17 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.province = provinceSelect.options[provinceSelect.selectedIndex].text;
   }
 
-  // Save to Firestore
-  db.collection('orders').add(formData)
-    .then(() => {
-      // Optionally you could store locally as before
-      localStorage.setItem('checkoutData', JSON.stringify(formData));
-      window.location.href = 'payment.html';
-    })
-    .catch(err => {
-      console.error('Error saving order:', err);
-      alert('Failed to save order. Please try again.');
-    });
+  localStorage.setItem('checkoutData', JSON.stringify(formData));
+  window.location.href = 'payment.html';
 });
   }
 
@@ -449,12 +440,34 @@ document.addEventListener('DOMContentLoaded', () => {
       const payerEmail = document.getElementById('payerEmail').value.trim();
       const payerPhone = document.getElementById('payerPhone').value.trim();
       const payerName = document.getElementById('payerName').value.trim();
+
+      const checkoutData = JSON.parse(localStorage.getItem('checkoutData') || '{}');
+
       if (payfastEmail) payfastEmail.value = payerEmail;
       if (payfastCell) payfastCell.value = payerPhone;
       const namePartsSubmit = payerName.split(/\s+/).filter(Boolean);
       if (payfastNameFirst) payfastNameFirst.value = namePartsSubmit[0] || '';
       if (payfastNameLast) payfastNameLast.value = namePartsSubmit.slice(1).join(' ') || namePartsSubmit[0] || '';
       payfastAmount.value = total.toFixed(2);
+      payfastCustom.value = payfastCustom.value + `;reference=transaction-${Date.now()}`;
+      const payment = {
+        email: payerEmail,
+        phone: payerPhone,
+        name: payerName
+      };
+
+      // Save to Firestore
+      db.collection('orders').add({ ...checkoutData, payment, payfastAmount: payfastAmount })
+        .then(() => {
+        localStorage.removeItem('kgodiso_cart');
+        window.appState.cart = [];
+        window.appState.saveCart();
+      
+      })
+      .catch(err => {
+        console.error('Error saving order:', err);
+        alert('Failed to save order. Please try again.');
+      });
     });
   }
 
