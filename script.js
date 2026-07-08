@@ -133,9 +133,6 @@ class AppState {
 }
 
 window.appState = new AppState();
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 function showFormMessage(container, message, type = 'error') {
   if (!container) return;
@@ -457,7 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       // Save to Firestore
-      db.collection('orders').add({ ...checkoutData, payment, payfastAmount: payfastAmount })
+      const db = window.db;
+      if (db) db.collection('orders').add({ ...checkoutData, payment, payfastAmount: payfastAmount.value })
         .then(() => {
         localStorage.removeItem('kgodiso_cart');
         window.appState.cart = [];
